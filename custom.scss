@@ -1,0 +1,57 @@
+/*-- scss:defaults --*/
+
+// fonts
+$font-family-sans-serif: "Lucida Sans", serif !default;
+
+$theme-blue: #0000ff;
+$theme-red: #ff0000;
+$theme-gray: #cccccc;
+$theme-white: #ffffff;
+
+@import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
+
+$font-family: 'Allura', cursive;
+
+/*-- scss:rules --*/
+
+.blue {
+  color: $theme-blue;
+}
+
+.red {
+  color: $theme-red;
+}
+
+.gray {
+  color: $theme-gray;
+}
+
+.white {
+  color: $theme-white;
+}
+
+.act {
+  font-family: Allura;
+  font-size: 300%;
+  color: $theme-white;
+}
+
+.reveal .slide aside .aside-footnotes {
+  margin-bottom: 2em;
+}
+
+/* alignment */
+
+.h2center h2 {
+  text-align: center;
+}
+
+.center body {
+  text-align: center;
+}
+
+.title-slide {
+  background-image: url(images/mcgill-epi-logo.png);
+  background-size: 500px;
+  background-position: 50% 65%;
+}

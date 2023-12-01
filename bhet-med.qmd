@@ -1,0 +1,28 @@
+---
+title: "Mediation Considerations"
+subtitle: "BHET Meeting"
+author: "Sam Harper"
+institute: "McGill University"
+date: 2023-12-21
+date-format: iso
+format: 
+  revealjs:
+    theme: [default, custom.scss]
+    width: 1400
+    height: 788
+    slide-number: true
+    html-math-method: mathjax
+    # embed-resources: true
+    title-slide-attributes: 
+      data-background-image: "images/mcgill-epi-logo.png"
+      data-background-position: 50% 85%
+      data-background-size: 500px
+editor: source
+bibliography: bhet-med.bib
+csl: vancouver-author-date.csl
+
+---
+
+##
+
+## References
