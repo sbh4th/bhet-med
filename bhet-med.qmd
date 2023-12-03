@@ -20,9 +20,330 @@ format:
 editor: source
 bibliography: bhet-med.bib
 csl: vancouver-author-date.csl
-
 ---
 
-##
+```{r setup, include = F}
+library(ggplot2)
+library(emo)
+```
+
+## HEI study objectives
+<br>
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+:::
+
+::: {.column width="75%"}
+
+### Aim 1.
+
+Estimate the total effect of the intervention.
+
+### Aim 2. 
+
+Estimate the contribution of changes in the chemical composition of $PM_{2.5}$ to the overall effect on health outcomes.
+
+### Aim 3. `r emo::ji("point_left")`
+
+Examine alternative [pathways and mechanisms]{.blue} that may contribute to the intervention’s impact.
+:::
+
+::::
+
+## Basic idea for mediation study
+
+To understand the pathways, mechanisms, and intermediates through which a treatment affects an outcome.
+
+<br>
+
+. . . 
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+:::
+
+::: {.column width="75%"}
+
+### How much of the policy effect is through:
+- Reduced exposure to $PM_{2.5}$
+- Other pathways (behavioral changes?)
+- Also consider multiple mediators
+:::
+
+::::
+
+## First part of mediation: total effect
+
+Basic idea: understand pathways of effects 
+
+:::: {.columns}
+
+::: {.column width="25%"}
+
+<br>
+
+Step 1: Estimate the total effect of $T$.
+
+:::
+
+::: {.column width="75%"}
+
+<br><br>
+
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1.5pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (t) at  (0,0) [align=center] {Policy\\($T$)};
+%\node (m) at  (3,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
+\node (y) at  (6,0) [align=center] {Blood\\pressure\\($Y$)};
+% \node (de) at (3,1.6) [align=center, text=red!80] {\small{Direct effect}};
+\node (te) at (3,-0.6) [align=center,text=red!80] {\small{Total effect}};
+\draw [->] (t) to (y);
+\end{tikzpicture}
+```
+
+:::
+
+::::
+
+
+## Second part of mediation: decomposition
+
+Basic idea: understand pathways of effects 
+
+:::: {.columns}
+
+::: {.column width="25%"}
+
+<br>
+
+Step 2: Estimate how much of the total effect is due to $PM_{2.5}$ vs. other pathways?
+
+:::
+
+::: {.column width="75%"}
+
+<br>
+
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1.5pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (t) at  (0,0) [align=center] {Policy\\($T$)};
+\node (m) at  (3,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
+\node (y) at  (6,0) [align=center] {Blood\\pressure\\($Y$)};
+\node (de) at (3,1.6) [align=center, text=red!80] {\small{Direct effect}};
+\node (ie) at (3,-0.6) [align=center,text=red!80] {\small{Indirect effect}};
+\foreach \from/\to in {t/m, m/y}
+  \draw [->] (\from) -- (\to);
+\draw [->] (t) to [bend left=35] (y);
+\end{tikzpicture}
+```
+
+:::
+
+::::
+
+## Basic DAG for Mediaion
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+<br>
+
+$X$ = pre-treatment covariates
+
+$T$ = exposure
+
+$M$ = mediator
+
+$W$ = confounders
+
+$Y$ = outcome
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (x) at (0,0) [align=center] {$X$};
+\node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
+%\node (tt) at (0.5,-1) [align=left] {\footnotesize{$T$: Policy}};
+\node (m) at  (3.5,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
+%\node (mt) at (0.5,-1.4) [align=left] {\footnotesize{$M$: PM~2.5~}};
+\node (y) at  (5.5,0) [align=center] {SBP\\($Y$)};
+%\node (yt) at (0.5,-1.8) [align=left] {\footnotesize{$Y$: SBP  }};
+\node (w) at (3.5,-1.5) [align=center] {$W$};
+% \node (u) at (4.5, -1.5) [align=center] {\textcolor{gray!30}{$U$}};
+\foreach \from/\to in {x/t, t/m, m/y, w/m, w/y}
+  \draw [->] (\from) -- (\to);
+%\foreach \from/\to in {u/m, u/y}
+  %\draw [->, color=gray!30] (\from) -- (\to);
+\draw [->] (t) to [bend left=45] (y);
+\draw [->] (x) to [bend left=45] (y.north);
+\draw [->] (x.north) to [bend left=45] (m);
+\end{tikzpicture}
+```
+
+:::
+
+::::
+
+## Basic DAG for Mediaion
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+<br>
+
+$X$ = pre-treatment covariates
+
+$T$ = exposure
+
+$M$ = mediator
+
+$W$ = confounders
+
+$Y$ = outcome
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (x) at (0,0) [align=center] {$X$};
+\node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
+%\node (tt) at (0.5,-1) [align=left] {\footnotesize{$T$: Policy}};
+\node (m) at  (3.5,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
+%\node (mt) at (0.5,-1.4) [align=left] {\footnotesize{$M$: PM~2.5~}};
+\node (y) at  (5.5,0) [align=center] {SBP\\($Y$)};
+%\node (yt) at (0.5,-1.8) [align=left] {\footnotesize{$Y$: SBP  }};
+\node (w) at (3.5,-1.5) [align=center] {$W$};
+\node (u) at (4.5, -1.5) [align=center] {\textcolor{gray!50}{$U$}};
+\foreach \from/\to in {x/t, t/m, m/y, w/m, w/y}
+  \draw [->] (\from) -- (\to);
+\foreach \from/\to in {u/m, u/y}
+  \draw [->, color=gray!50] (\from) -- (\to);
+\draw [->] (t) to [bend left=45] (y);
+\draw [->] (x) to [bend left=45] (y.north);
+\draw [->] (x.north) to [bend left=45] (m);
+\draw [->, color=gray!50] (u) to [bend left=45] (t);
+\end{tikzpicture}
+```
+
+:::
+
+::::
+
+
+## Quantities of interest {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
+
+Estimate two regressions:
+$$\color{red}{E[Y|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
+$$E[Y|T,X,M] = \gamma_{0} + \gamma_{1}T + \gamma_{2}M + \gamma_{3}TM + \gamma_{4}X + \gamma_{5}W$$
+
+. . . 
+
+First equation estimates the total effect of the ban:
+$$\color{red}{TE=\beta_{1}(T^{*}-T)}$$
+where $T^{*}$ is exposure to ban and $T$ is no exposure.
+
+
+## Quantities of interest {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
+
+Estimate two regressions:^[@VanderWeele:2015aa]
+$${E[Y|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
+$$\color{red}E[Y|T,X,M] = \gamma_{0} + \gamma_{1}T + \gamma_{2}M + \gamma_{3}TM + \gamma_{4}X + \gamma_{5}W$$
+
+
+Second equation estimates the "Controlled Direct Effect":
+$$\color{red}{CDE=\gamma_{1}+\gamma_{3}TM}$$
+
+## Key assumptions {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+:::
+
+::: {.column width="75%"}
+
+Assumptions for valid CDE:
+
+- No confounding of the total effect.
+- No confounding of the mediator-outcome effect.
+- No confounding of the exposure-mediator effect.
+:::
+
+::::
+
+## What the hell is the CDE?
+<br>
+
+### Interpretation
+
+*This effect is the contrast between the counterfactual outcome if the individual were exposed at $T=t$ and the counterfactual outcome if the same individual were exposed at* $T=t*$, *with the mediator set to a fixed level* $M=m$.
+
+. . .
+
+<br>
+
+### English:
+
+*"By how much would blood pressure change if the policy were implemented and we held $PM_{2.5}$ fixed?"*
+
+## Extensions to multiple mediators
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+<br>
+
+- More complicated
+
+- Sequential mediatiors?
+
+- Interactions between mediators?
+
+:::
+
+::: {.column width="75%"}
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (x) at (0,0) [align=center] {$X$};
+\node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
+\node (m1) at  (3.5,1) [align=center] {PM\textsubscript{2.5}\\($M_{1}$)};
+\node (m2) at  (3.5,-1) [align=center] {Indoor\\Temp\\($M_{2}$)};
+\node (y) at  (5.5,0) [align=center] {SBP\\($Y$)};
+\node (w) at (2,-1.5) [align=center] {$W$};
+\foreach \from/\to in {x/t, t/y, t/m1, t/m2, m1/y, m2/y, w/m1, w/m2}
+  \draw [->] (\from) -- (\to);
+\draw [->] (x) to [bend left=45] (y.north);
+\draw [->] (x) to [bend left=20] (m1);
+\draw [->] (x) to [bend right=25] (m2);
+\draw [->] (w) to [bend right=45] (y);
+\end{tikzpicture}
+```
+:::
+
+::::
+
 
 ## References
