@@ -1,0 +1,30 @@
+---
+title: "Mediation Example"
+format: html
+---
+```{r setup, message=F}
+library(mediator)
+library(regmedint)
+library(modelsummary)
+library(marginaleffects)
+library(kableExtra)
+```
+
+Purpose of this document is to just work through the key ideas for mediation using an empirical example. We'll start with. 
+
+Let's use the example data from the `mediator` package
+
+```{r}
+mm <- mediator::mediator(data = mediation_example,
+                   out.model = glm(y ~ x + m_01 + c + x*m_01,
+                                   family = "binomial",
+                                   data = mediation_example),
+                   med.model = glm(m_01 ~ x + c, 
+                                   family = "binomial",
+                                   data = mediation_example),
+                   treat = "x")
+
+kbl(mm, digits = 3) |>
+  kable_styling()
+```
+
