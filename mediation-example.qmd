@@ -28,3 +28,41 @@ kbl(mm, digits = 3) |>
   kable_styling()
 ```
 
+
+
+regmedint_obj <- regmedint(data = mediation_example,
+                           ## Variables
+                           yvar = "y",
+                           avar = "x",
+                           mvar = "m_01",
+                           cvar = c("c"),
+                           # eventvar = "event",
+                           ## Values at which effects are evaluated
+                           a0 = 0,
+                           a1 = 1,
+                           m_cde = 0.504,
+                           c_cond = 1,
+                           ## Model types
+                           mreg = "logistic",
+                           yreg = "logistic",
+                           ## Additional specification
+                           interaction = TRUE,
+                           casecontrol = FALSE)
+
+
+ cde_model <- glm(formula = y ~ x + m_01 + x:m_01 + c, family = binomial(link = "logit"), 
++                  data = mediation_example)
+
+> exp(-2.2235 + (-1.2760*1) + (0.3625*0.504) + (.3030*1) + (.9077*1*0.504))/(1+exp(-2.2235 + (-1.2760*1) + (0.3625*0.504) + (.3030*1) + (.9077*1*0.504)))
+[1] 0.0720031
+> exp(-2.2235 + (-1.2760*0) + (0.3625*0.504) + (.3030*1) + (.9077*0*0.504))/(1+exp(-2.2235 + (-1.2760*0) + (0.3625*0.504) + (.3030*1) + (.9077*0*0.504)))
+[1] 0.1495926
+> exp(-2.2235 + (-1.2760*1) + (0.3625*1) + (.3030*1) + (.9077*1*1))/(1+exp(-2.2235 + (-1.2760*1) + (0.3625*1) + (.3030*1) + (.9077*1*1)))
+[1] 0.1271607
+> exp(-2.2235 + (-1.2760*0) + (0.3625*1) + (.3030*1) + (.9077*0*1))/(1+exp(-2.2235 + (-1.2760*0) + (0.3625*1) + (.3030*1) + (.9077*0*1)))
+
+avg_predictions(cde_model, variables = "x", newdata = datagrid(m_01 = 1))
+
+avg_comparisons(cde_model, variables = "x", newdata = datagrid(m_01 = 0.504, c = 1), comparison = function(hi, lo) log( (hi / (1 - hi)) / (lo / (1 - lo)) ))
+
+avg_predictions(cde_model, variables = "x", newdata = datagrid(m_01 = 0.504))
