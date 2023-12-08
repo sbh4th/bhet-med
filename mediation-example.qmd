@@ -28,41 +28,111 @@ kbl(mm, digits = 3) |>
   kable_styling()
 ```
 
+The estimate of the controlled direct effect ($CDE$) here is 0.279 on the odds-ratio scale. We can see the estimates from the outcome regression if we just look at that model from the `mediator` package:
 
+```{r}
+out.model = glm(y ~ x + m_01 + c + x*m_01,
+                                   family = "binomial",
+                                   data = mediation_example)
+modelsummary(list("Mediator" = out.model),
+  shape = term ~ model + statistic, 
+  statistic = c("({std.error})", "conf.int"),
+  gof_omit ='DF|Deviance|R2|AIC|BIC|Log.Lik|ICC|RMSE')
+```
+The coefficient on `x` after adjustment for the mediator `m_01` and allowing for exposure-mediator interaction is -1.276. If we exponentiate it we get 0.279 from the table above, but this is inconsistent with the standard definition, where $CDE = \beta_{1} + m\beta_{2}(a - a*)$ (using the average value of `m_01` in the data of 0.504). Based on the coefficients in the table above, we should get $CDE = -1.276 + 0.504*0.908(1 - 0) = -0.818$. If we exponentiate that coefficient we get $CDE = 0.44$.
 
+How about with the `regmedint` package, which also does mediation analysis? Let's have a look. 
+
+```{r}
 regmedint_obj <- regmedint(data = mediation_example,
-                           ## Variables
-                           yvar = "y",
-                           avar = "x",
-                           mvar = "m_01",
-                           cvar = c("c"),
-                           # eventvar = "event",
-                           ## Values at which effects are evaluated
-                           a0 = 0,
-                           a1 = 1,
-                           m_cde = 0.504,
-                           c_cond = 1,
-                           ## Model types
-                           mreg = "logistic",
-                           yreg = "logistic",
-                           ## Additional specification
-                           interaction = TRUE,
-                           casecontrol = FALSE)
+ yvar = "y", avar = "x", mvar = "m_01", cvar = c("c"),
+ ## Values at which effects are evaluated
+ a0 = 0, a1 = 1, m_cde = 0.504, c_cond = 1,
+ ## Model types
+ mreg = "logistic", yreg = "logistic",
+ ## Additional specification
+ interaction = TRUE, casecontrol = FALSE)
+
+summary(regmedint_obj)
+```
+
+Here we get a different answer for the $CDE$, and the estimate from `regmedint` is -0.818, which is what we calculated above. 
+
+But what about on the absolute scale? What is the $CDE$ on the risk difference scale? We can start by doing this by hand, using the inverse logit function. If we take the outcome model we fit above, we can get the predicted probabilities at different levels of the mediator. 
+
+```{r}
+b0 <- out.model$coefficients[1]
+bx <- out.model$coefficients[2]
+bm <- out.model$coefficients[3]
+bc <- out.model$coefficients[4]
+bxm <- out.model$coefficients[5]
+
+# exposed, m at average
+ema <- exp(b0 + (bx*1) + (bm*0.504) + (bc*1) + (bxm*1*0.504)) / 
+  (1 + exp(b0 + (bx*1) + (bm*0.504) + (bc*1) + (bxm*1*0.504)))
+
+# unexposed, m at average
+uma <- exp(b0 + (bx*0) + (bm*0.504) + (bc*1) + (bxm*0*0.504)) / 
+  (1 + exp(b0 + (bx*0) + (bm*0.504) + (bc*1) + (bxm*0*0.504)))
+
+# exposed, m at 1
+em1 <- exp(b0 + (bx*1) + (bm*1) + (bc*1) + (bxm*1*1)) / 
+  (1 + exp(b0 + (bx*1) + (bm*1) + (bc*1) + (bxm*1*1)))
+
+# unexposed, m at 1
+um1 <- exp(b0 + (bx*0) + (bm*1) + (bc*1) + (bxm*0*1)) / 
+  (1 + exp(b0 + (bx*0) + (bm*1) + (bc*1) + (bxm*0*1)))
+
+```
+
+If we set the mediator at its average value of 0.504, we get the following risks for exposed and unexposed populations:
+
+`r paste(round(ema,3), round(uma,3), sep = "  ")`
+
+And the difference between those risks is:
+
+`r round(ema - uma, 3)`
+
+We can do the same under a situation where we set the mediator to a different value of 1
+
+`r paste(round(em1,3), round(um1,3), sep = "  ")`
+
+And the difference between those risks is:
+
+`r round(em1 - um1, 3)`
+
+That's fine for point estimates, but it doesn't give us measures of precision, so let's use the `marginaleffects` package to do that. Using the outcome model above, we'll use the `avg_predictions` function to get the estimates for each exposure status, and the `avg_slopes` to get the difference.
+
+```{r}
+apm <- avg_predictions(out.model, variables = "x", 
+  newdata = datagrid(m_01 = 0.504))
+
+kbl(apm, digits = 3) |>
+  kable_styling()
+
+asm <- avg_slopes(out.model, variables = "x",
+  newdata = datagrid(m_01 = 0.504))
+
+kbl(asm, digits = 3) |>
+  kable_styling()
+
+```
+
+These are the same estimates we got by hand above. Let's do the same, but set the mediator to a value of 1 rather than the mean of 0.504.
 
 
- cde_model <- glm(formula = y ~ x + m_01 + x:m_01 + c, family = binomial(link = "logit"), 
-+                  data = mediation_example)
+```{r}
+ap1 <- avg_predictions(out.model, variables = "x", 
+  newdata = datagrid(m_01 = 1))
 
-> exp(-2.2235 + (-1.2760*1) + (0.3625*0.504) + (.3030*1) + (.9077*1*0.504))/(1+exp(-2.2235 + (-1.2760*1) + (0.3625*0.504) + (.3030*1) + (.9077*1*0.504)))
-[1] 0.0720031
-> exp(-2.2235 + (-1.2760*0) + (0.3625*0.504) + (.3030*1) + (.9077*0*0.504))/(1+exp(-2.2235 + (-1.2760*0) + (0.3625*0.504) + (.3030*1) + (.9077*0*0.504)))
-[1] 0.1495926
-> exp(-2.2235 + (-1.2760*1) + (0.3625*1) + (.3030*1) + (.9077*1*1))/(1+exp(-2.2235 + (-1.2760*1) + (0.3625*1) + (.3030*1) + (.9077*1*1)))
-[1] 0.1271607
-> exp(-2.2235 + (-1.2760*0) + (0.3625*1) + (.3030*1) + (.9077*0*1))/(1+exp(-2.2235 + (-1.2760*0) + (0.3625*1) + (.3030*1) + (.9077*0*1)))
+kbl(ap1, digits = 3) |>
+  kable_styling()
 
-avg_predictions(cde_model, variables = "x", newdata = datagrid(m_01 = 1))
+as1 <- avg_slopes(out.model, variables = "x",
+  newdata = datagrid(m_01 = 1))
 
-avg_comparisons(cde_model, variables = "x", newdata = datagrid(m_01 = 0.504, c = 1), comparison = function(hi, lo) log( (hi / (1 - hi)) / (lo / (1 - lo)) ))
+kbl(as1, digits = 3) |>
+  kable_styling()
 
-avg_predictions(cde_model, variables = "x", newdata = datagrid(m_01 = 0.504))
+```
+
