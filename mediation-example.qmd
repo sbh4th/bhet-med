@@ -136,3 +136,40 @@ kbl(as1, digits = 3) |>
 
 ```
 
+## Bayesian implementation
+```{r}
+library(brms)
+library(cmdstanr)
+options(mc.cores = 4,
+  brms.backend = "cmdstanr")
+
+# mediator model
+m_model <- bf(m_01 ~ 1 + x + c)
+
+# outcome model
+y_model <- bf(y ~ 1 + x + m_01 + c + x*m_01)
+
+# brms model
+bmodel <- brm(
+  data = mediation_example, 
+  family = bernoulli(),
+  mvbf(m_model, y_model, rescor = FALSE),
+  cores = 4)
+
+# set up data frame for predictions
+ndm <- tibble(x = 0:1, m_01 = 0.504, c = 1.015)
+
+# add predicted estimates
+draws_df <- ndm %>% 
+  add_epred_draws(bmodel)
+
+# summarize
+draws_df |> filter(.category == "y") |> pivot_wider(id_cols = .draw, names_from = x, values_from = .epred) |> mutate(diff = `1` - `0`) |> median_qi(diff)
+
+```
+
+Could also try by hand
+effects <- draws %>% 
+  mutate(cde = b_y_x + (0.504 * `b_y_x:m_01`),
+         nde = 1) %>%
+  pivot_longer(cde:nde)

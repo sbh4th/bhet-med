@@ -263,7 +263,7 @@ where $T^{*}$ is exposure to ban and $T$ is no exposure.
 
 ## Quantities of interest {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
 
-Estimate two regressions:^[@VanderWeele:2015aa]
+Estimate two regressions:^[@VanderWeele:2015aa. Other quantities include the "Natural Direct Effect" ($\gamma_{1} + \gamma_{3}(\beta_{0} + \beta_{1} + \beta_{2})$) and the "Natural Indirect Effect" ($\gamma_{2}\beta_{1} + \gamma_{3}\beta_{1}$)]
 $${E[Y|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
 $$\color{red}E[Y|T,X,M] = \gamma_{0} + \gamma_{1}T + \gamma_{2}M + \gamma_{3}TM + \gamma_{4}X + \gamma_{5}W$$
 
