@@ -3,11 +3,17 @@ title: "Mediation Example"
 format: html
 ---
 ```{r setup, message=F}
+library(here)
+library(tidyverse)
 library(mediator)
 library(regmedint)
 library(modelsummary)
 library(marginaleffects)
 library(kableExtra)
+library(brms)
+library(cmdstanr)
+options(mc.cores = 4,
+  brms.backend = "cmdstanr")
 ```
 
 Purpose of this document is to just work through the key ideas for mediation using an empirical example. We'll start with. 
@@ -137,12 +143,7 @@ kbl(as1, digits = 3) |>
 ```
 
 ## Bayesian implementation
-```{r}
-library(brms)
-library(cmdstanr)
-options(mc.cores = 4,
-  brms.backend = "cmdstanr")
-
+```{r, eval=FALSE}
 # mediator model
 m_model <- bf(m_01 ~ 1 + x + c)
 
