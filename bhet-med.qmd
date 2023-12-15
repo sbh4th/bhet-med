@@ -23,6 +23,7 @@ csl: vancouver-author-date.csl
 ---
 
 ```{r setup, include = F}
+library(here)
 library(ggplot2)
 library(emo)
 ```
@@ -220,7 +221,7 @@ $Y$ = outcome
 ::: {.column width="50%"}
 
 
-```{r, engine = 'tikz'}
+```{r, engine = 'tikz', cache=T}
 \begin{tikzpicture}[shorten > = 1pt, line width=1pt]
 \tikzstyle{every node} = [rectangle, fill=white, draw=none]
 \node (x) at (0,0) [align=center] {$X$};
@@ -307,7 +308,7 @@ Assumptions for valid CDE:
 
 *"By how much would blood pressure change if the policy were implemented and we held $PM_{2.5}$ fixed?"*
 
-## Example: Policy, Respiratory symptoms, Temperature
+## Ex: Respiratory symptoms, Temperature
 
 :::: {.columns}
 
@@ -321,25 +322,29 @@ $T$ = policy
 
 $M$ = temperature
 
-$W$ = {empty}
+$W$ = [{empty}]{.gray}
 
 $Y$ = respiratory symptoms
 
 :::
 
 ::: {.column width="50%"}
-
-
-```{r, engine = 'tikz'}
+```{r, engine = 'tikz', cache=T}
 \begin{tikzpicture}[shorten > = 1pt, line width=1pt]
 \tikzstyle{every node} = [rectangle, fill=white, draw=none]
-\node (x) at (0,0) [align=center] {$X$};
+\node (x) at (-1,0) [align=center] {Cohort,\\Time FEs\\($X$)};
 \node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
+%\node (tt) at (0.5,-1) [align=left] {\footnotesize{$T$: Policy}};
 \node (m) at  (3.5,0) [align=center] {Temp\\($M$)};
+%\node (mt) at (0.5,-1.4) [align=left] {\footnotesize{$M$: PM~2.5~}};
 \node (y) at  (5.5,0) [align=center] {Resp\\($Y$)};
-\node (w) at (3.5,-1.5) [align=center] {\textcolor{gray!30}{{$W$}};
-\foreach \from/\to in {x/t, t/m, m/y, w/m, w/y}
+%\node (yt) at (0.5,-1.8) [align=left] {\footnotesize{$Y$: SBP  }};
+\node (w) at (3.5,-1.5) [align=center] {\textcolor{gray!30}{$W$}};
+% \node (u) at (4.5, -1.5) [align=center] {\textcolor{gray!30}{$U$}};
+\foreach \from/\to in {x/t, t/m, m/y}
   \draw [->] (\from) -- (\to);
+\foreach \from/\to in {w/m, w/y}
+  \draw [->, color=gray!30] (\from) -- (\to);
 \draw [->] (t) to [bend left=45] (y);
 \draw [->] (x) to [bend left=45] (y.north);
 \draw [->] (x.north) to [bend left=45] (m);
@@ -349,6 +354,32 @@ $Y$ = respiratory symptoms
 :::
 
 ::::
+
+## Total Effect
+```{.r}
+x <- 1
+x
+```
+
+## Total Effect
+
+$$logit(Y_{it}) = \alpha^{village}_{v[i]} + \sum_{r=q}^{T} \beta_{r} d_{r} + \sum_{s=r}^{T} \gamma_{s} fs_{t}+ \sum_{r=q}^{T} \sum_{s=r}^{T} \tau_{rt} (d_{r} \times fs_{t})$$ 
+where: 
+
+- $\alpha^{village}_{v[i]}$ = village-level random intercept
+- $d_{r}$ = cohort fixed effects  
+- $fs_{t}$ = time fixed effects  
+- $\tau_{rt}$ = cohort-time *ATTs*
+
+all on the log odds scale.
+
+## Marginal estimates (simple average)
+```{r, echo=F,out.width="150%"}
+#| fig-align: center
+knitr::include_graphics(here("images", "posterior-te.png"))
+```
+
+## Mediation model
 
 
 ## Extensions to multiple mediators
@@ -373,16 +404,16 @@ $Y$ = respiratory symptoms
 \tikzstyle{every node} = [rectangle, fill=white, draw=none]
 \node (x) at (0,0) [align=center] {$X$};
 \node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
-\node (m) at  (3.5,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
+\node (m1) at  (3.5,1) [align=center] {PM\textsubscript{2.5}\\($M_{1}$)};
+\node (m2) at  (3.5,-1) [align=center] {Indoor\\Temp\\($M_{2}$)};
 \node (y) at  (5.5,0) [align=center] {SBP\\($Y$)};
-\node (w) at (3.5,-1.5) [align=center] {\textcolor{gray!30}{$W$}};
-\foreach \from/\to in {x/t, t/m, m/y}
+\node (w) at (2,-1.5) [align=center] {$W$};
+\foreach \from/\to in {x/t, t/y, t/m1, t/m2, m1/y, m2/y, w/m1, w/m2}
   \draw [->] (\from) -- (\to);
-\draw [->] (t) to [bend left=45] (y);
 \draw [->] (x) to [bend left=45] (y.north);
-\draw [->] (x.north) to [bend left=45] (m);
-\foreach \from/\to in {w/m, w/y}
-  \draw [->, color=gray!30] (\from) -- (\to);
+\draw [->] (x) to [bend left=20] (m1);
+\draw [->] (x) to [bend right=25] (m2);
+\draw [->] (w) to [bend right=45] (y);
 \end{tikzpicture}
 ```
 :::
