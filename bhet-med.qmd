@@ -197,7 +197,7 @@ $Y$ = outcome
 
 ::::
 
-## Basic DAG for Mediaion
+## Basic DAG for Mediation
 
 :::: {.columns}
 
@@ -265,7 +265,7 @@ where $T^{*}$ is exposure to ban and $T$ is no exposure.
 
 Estimate two regressions:^[@VanderWeele:2015aa. Other quantities include the "Natural Direct Effect" ($\gamma_{1} + \gamma_{3}(\beta_{0} + \beta_{1} + \beta_{2})$) and the "Natural Indirect Effect" ($\gamma_{2}\beta_{1} + \gamma_{3}\beta_{1}$)]
 $${E[M|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
-$$\color{red}E[Y|T,X,M] = \gamma_{0} + \gamma_{1}T + \gamma_{2}M + \gamma_{3}TM + \gamma_{4}X + \gamma_{5}W$$
+$$\color{red}E[Y|T,X,M] = \theta_{0} + \theta_{1}T + \theta_{2}M + \theta_{3}TM + \theta_{4}X + \theta_{5}W$$
 
 
 Second equation estimates the "Controlled Direct Effect":
@@ -309,6 +309,48 @@ Assumptions for valid CDE:
 
 ## Example: Policy, Respiratory symptoms, Temperature
 
+:::: {.columns}
+
+::: {.column width="50%"}
+
+<br>
+
+$X$ = cohort, time FEs
+
+$T$ = policy
+
+$M$ = temperature
+
+$W$ = {empty}
+
+$Y$ = respiratory symptoms
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r, engine = 'tikz'}
+\begin{tikzpicture}[shorten > = 1pt, line width=1pt]
+\tikzstyle{every node} = [rectangle, fill=white, draw=none]
+\node (x) at (0,0) [align=center] {$X$};
+\node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
+\node (m) at  (3.5,0) [align=center] {Temp\\($M$)};
+\node (y) at  (5.5,0) [align=center] {Resp\\($Y$)};
+\node (w) at (3.5,-1.5) [align=center] {\textcolor{gray!30}{{$W$}};
+\foreach \from/\to in {x/t, t/m, m/y, w/m, w/y}
+  \draw [->] (\from) -- (\to);
+\draw [->] (t) to [bend left=45] (y);
+\draw [->] (x) to [bend left=45] (y.north);
+\draw [->] (x.north) to [bend left=45] (m);
+\end{tikzpicture}
+```
+
+:::
+
+::::
+
+
 ## Extensions to multiple mediators
 
 :::: {.columns}
@@ -319,7 +361,7 @@ Assumptions for valid CDE:
 
 - More complicated
 
-- Sequential mediatiors?
+- Sequential mediators?
 
 - Interactions between mediators?
 
@@ -331,16 +373,16 @@ Assumptions for valid CDE:
 \tikzstyle{every node} = [rectangle, fill=white, draw=none]
 \node (x) at (0,0) [align=center] {$X$};
 \node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
-\node (m1) at  (3.5,1) [align=center] {PM\textsubscript{2.5}\\($M_{1}$)};
-\node (m2) at  (3.5,-1) [align=center] {Indoor\\Temp\\($M_{2}$)};
+\node (m) at  (3.5,0) [align=center] {PM\textsubscript{2.5}\\($M$)};
 \node (y) at  (5.5,0) [align=center] {SBP\\($Y$)};
-\node (w) at (2,-1.5) [align=center] {$W$};
-\foreach \from/\to in {x/t, t/y, t/m1, t/m2, m1/y, m2/y, w/m1, w/m2}
+\node (w) at (3.5,-1.5) [align=center] {\textcolor{gray!30}{$W$}};
+\foreach \from/\to in {x/t, t/m, m/y}
   \draw [->] (\from) -- (\to);
+\draw [->] (t) to [bend left=45] (y);
 \draw [->] (x) to [bend left=45] (y.north);
-\draw [->] (x) to [bend left=20] (m1);
-\draw [->] (x) to [bend right=25] (m2);
-\draw [->] (w) to [bend right=45] (y);
+\draw [->] (x.north) to [bend left=45] (m);
+\foreach \from/\to in {w/m, w/y}
+  \draw [->, color=gray!30] (\from) -- (\to);
 \end{tikzpicture}
 ```
 :::
