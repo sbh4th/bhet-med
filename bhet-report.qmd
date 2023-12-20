@@ -1,0 +1,94 @@
+---
+title: "HEI Report"
+subtitle: "BHET Meeting"
+author: "Sam Harper"
+institute: "McGill University"
+date: 2023-12-21
+date-format: iso
+format: 
+  revealjs:
+    theme: [default, custom.scss]
+    width: 1400
+    height: 788
+    slide-number: true
+    html-math-method: katex
+    # embed-resources: true
+    title-slide-attributes: 
+      data-background-image: "images/mcgill-epi-logo.png"
+      data-background-position: 50% 85%
+      data-background-size: 500px
+editor: source
+bibliography: bhet-med.bib
+csl: vancouver-author-date.csl
+---
+
+```{r setup, include = F}
+library(here)
+library(ggplot2)
+library(emo)
+library(tidyverse)
+library(marginaleffects)
+library(modelsummary)
+library(patchwork)
+library(tidybayes)
+library(kableExtra)
+```
+
+## HEI study objectives
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+:::
+
+::: {.column width="75%"}
+
+### Aim 1.
+
+Estimate the total effect of the intervention.
+
+### Aim 2. 
+
+Estimate the contribution of changes in the chemical composition of $PM_{2.5}$ to the overall effect on health outcomes.
+
+### Aim 3. `r emo::ji("point_left")`
+
+Examine alternative [pathways and mechanisms]{.blue} that may contribute to the intervention’s impact.
+:::
+
+::::
+
+## HEI Review Questions
+
+- Consistent with the original statement of work?
+- Introduction provides adequate background to interpret the study and its
+findings?
+- Are the study design and methods appropriate?
+- Do the results follow from the study design and methods and include appropriate
+statistical analyses?
+- Are the interpretation and conclusions adequately supported by the results? Are the caveats appropriately described?
+- Do the raw data and their subsequent analyses require more in-depth evaluation?
+
+## HEI Instructions
+
+- Core Report should be relatively short (no more than 20,000 words)
+- Summarize all major findings and key conclusions, placed in the context of all results (both positive and negative)
+- Present a combined total of 10 to 15 essential figures and summary tables.
+- Additional figures, tables, and text in web-only Appendices
+- Additional Materials (e.g.,computer code or raw data tables).
+
+## Timeline
+
+- January 19, 2024: HEI Results Webinar (Jill & Sam)
+
+- March 31, 2024: Final Report due to HEI
+
+- April-May, 2024: Review by HEI Committee
+
+- 
+
+
+## References

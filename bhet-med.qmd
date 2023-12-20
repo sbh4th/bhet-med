@@ -11,7 +11,7 @@ format:
     width: 1400
     height: 788
     slide-number: true
-    html-math-method: mathjax
+    html-math-method: katex
     # embed-resources: true
     title-slide-attributes: 
       data-background-image: "images/mcgill-epi-logo.png"
@@ -26,9 +26,16 @@ csl: vancouver-author-date.csl
 library(here)
 library(ggplot2)
 library(emo)
+library(tidyverse)
+library(marginaleffects)
+library(modelsummary)
+library(patchwork)
+library(tidybayes)
+library(kableExtra)
 ```
 
 ## HEI study objectives
+
 <br>
 
 :::: {.columns}
@@ -53,6 +60,7 @@ Examine alternative [pathways and mechanisms]{.blue} that may contribute to the 
 :::
 
 ::::
+
 
 ## Basic idea for mediation study
 
@@ -80,7 +88,7 @@ To understand the pathways, mechanisms, and intermediates through which a treatm
 
 ## First part of mediation: total effect
 
-Basic idea: understand pathways of effects 
+<br>
 
 :::: {.columns}
 
@@ -149,7 +157,7 @@ Step 2: Estimate how much of the total effect is due to $PM_{2.5}$ vs. other pat
 
 ::::
 
-## Basic DAG for Mediaion
+## Basic DAG for Mediation
 
 :::: {.columns}
 
@@ -251,20 +259,17 @@ $Y$ = outcome
 
 ## Quantities of interest {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
 
-Estimate two regressions:
+Total effect:
 $$\color{red}{E[Y|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
-$$E[Y|T,X,M] = \theta_{0} + \theta_{1}T + \theta_{2}M + \theta_{3}TM + \theta_{4}X + \theta_{5}W$$
 
-. . . 
-
-First equation estimates the total effect of the ban:
+This equation estimates the total effect of the ban:
 $$\color{red}{TE=\beta_{1}(T^{*}-T)}$$
 where $T^{*}$ is exposure to ban and $T$ is no exposure.
 
 
-## Quantities of interest {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
+## Mediation model {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
 
-Estimate two regressions:^[@VanderWeele:2015aa. Other quantities include the "Natural Direct Effect" ($\gamma_{1} + \gamma_{3}(\beta_{0} + \beta_{1} + \beta_{2})$) and the "Natural Indirect Effect" ($\gamma_{2}\beta_{1} + \gamma_{3}\beta_{1}$)]
+Estimate two regressions:^[@VanderWeele:2015aa. Other quantities include the "Natural Direct Effect" ($\theta_{1} + \theta_{3}(\beta_{0} + \beta_{1} + \beta_{2})$) and the "Natural Indirect Effect" ($\theta_{2}\beta_{1} + \theta_{3}\beta_{1}$)]
 $${E[M|T,X]=\beta_{0}+\beta_{1}T +\beta_{2}X}$$
 $$\color{red}E[Y|T,X,M] = \theta_{0} + \theta_{1}T + \theta_{2}M + \theta_{3}TM + \theta_{4}X + \theta_{5}W$$
 
@@ -288,7 +293,11 @@ Assumptions for valid CDE:
 
 - No confounding of the total effect.
 - No confounding of the mediator-outcome effect.
+
+Valid NDE and NIE also require:
+
 - No confounding of the exposure-mediator effect.
+- No mediator–outcome confounder affected by treatment.
 :::
 
 ::::
@@ -300,15 +309,13 @@ Assumptions for valid CDE:
 
 *This effect is the contrast between the counterfactual outcome if the individual were exposed at $T=t$ and the counterfactual outcome if the same individual were exposed at* $T=t*$, *with the mediator set to a fixed level* $M=m$.
 
-. . .
-
 <br>
 
 ### English:
 
-*"By how much would blood pressure change if the policy were implemented and we held $PM_{2.5}$ fixed?"*
+*"By how much would blood pressure change if the policy were implemented and we held $PM_{2.5}$ fixed at* $m$ *?"*
 
-## Ex: Respiratory symptoms, Temperature
+## Ex: Respiratory symptoms, Sleep
 
 :::: {.columns}
 
@@ -320,11 +327,11 @@ $X$ = cohort, time FEs
 
 $T$ = policy
 
-$M$ = temperature
+$M$ = hours of sleep
 
 $W$ = [{empty}]{.gray}
 
-$Y$ = respiratory symptoms
+$Y$ = Poor respiratory symptoms
 
 :::
 
@@ -335,7 +342,7 @@ $Y$ = respiratory symptoms
 \node (x) at (-1,0) [align=center] {Cohort,\\Time FEs\\($X$)};
 \node (t) at  (1.5,0) [align=center] {Policy\\($T$)};
 %\node (tt) at (0.5,-1) [align=left] {\footnotesize{$T$: Policy}};
-\node (m) at  (3.5,0) [align=center] {Temp\\($M$)};
+\node (m) at  (3.5,0) [align=center] {Sleep\\($M$)};
 %\node (mt) at (0.5,-1.4) [align=left] {\footnotesize{$M$: PM~2.5~}};
 \node (y) at  (5.5,0) [align=center] {Resp\\($Y$)};
 %\node (yt) at (0.5,-1.8) [align=left] {\footnotesize{$Y$: SBP  }};
@@ -355,32 +362,256 @@ $Y$ = respiratory symptoms
 
 ::::
 
-## Total Effect
-```{.r}
-x <- 1
-x
+'Poor respiratory symptoms' = 1 if frequency of any coughing, wheezing, etc. were "most" or "several" days a week.
+
+## Data
+- 3 waves, complete data on outcome and mediator
+```{r, cache = T}
+d3 <- readRDS(here("data-clean", "d3"))
+
+t1 <- d3 %>% 
+  select(v_id, year, cohort_year, treat, resp, hsleep) %>%
+  mutate(cohort_year = recode(cohort_year, `-Inf` = 2018))
+datasummary_skim(t1)
 ```
+
+## Total Effect {visibility="hidden"}
+::: {.panel-tabset}
+
+### Code
+
+```{.r}
+te_med <-
+  brm(data = d3, 
+      family = bernoulli(),
+      resp ~ 1 + (1 | v_id) + 
+        treat:cohort_year_2019:year_2019 + 
+        treat:cohort_year_2019:year_2021 +
+        treat:cohort_year_2020:year_2021 +
+        treat:cohort_year_2021:year_2021 +
+        cohort_year_2019 + cohort_year_2020 +
+        cohort_year_2021 + year_2019 + year_2021,
+      prior = c(prior(normal(0, 1), class = Intercept),
+       prior(normal(0, 1), class = b),
+       prior(exponential(1), class = sd)),
+      iter = 2000, warmup = 1000, chains = 4, cores = 4,
+      sample_prior = "yes", 
+      seed = 3857,
+      file = "code/fits/bhet-med-te_med")
+```
+
+### Results
+
+Results
+
+:::
+
 
 ## Total Effect
 
 $$logit(Y_{it}) = \alpha^{village}_{v[i]} + \sum_{r=q}^{T} \beta_{r} d_{r} + \sum_{s=r}^{T} \gamma_{s} fs_{t}+ \sum_{r=q}^{T} \sum_{s=r}^{T} \tau_{rt} (d_{r} \times fs_{t})$$ 
-where: 
 
 - $\alpha^{village}_{v[i]}$ = village-level random intercept
-- $d_{r}$ = cohort fixed effects  
+- $d_{r}$ = treatment cohort fixed effects  
 - $fs_{t}$ = time fixed effects  
-- $\tau_{rt}$ = cohort-time *ATTs*
+- $\tau_{rt}$ = cohort-time *ATTs*^[Log odds scale. Implemented using `brms` @Burkner:2017aa and `marginaleffects` @Arel-Bundock:2023aa] 
 
-all on the log odds scale.
+## Marginal effects
+```{r, cache=TRUE}
+## load brms model
+te_med <- readRDS(here("code/fits", 
+  "bhet-med-te_med.rds"))
 
-## Marginal estimates (simple average)
-```{r, echo=F,out.width="150%"}
-#| fig-align: center
-knitr::include_graphics(here("images", "posterior-te.png"))
+bme_pred <- predictions(
+  te_med, 
+  newdata   = subset(d3, treat==1),
+  variables = "treat", 
+  by        = "treat"
+  )
+
+# plot of predicted probabilities by treatment
+bme_pred_p <- bme_pred |>
+  posterior_draws() |>
+  ggplot(aes(x = draw, fill=factor(treat))) +
+    stat_halfeye(slab_alpha = .5) + 
+    annotate("text", x = 0.61, y = 0.7, 
+           label="Control", color='#1b9e77') +
+    annotate("text", x = 0.49, y = 0.95, 
+           label="Treated", color='#d95f02') +
+  scale_x_continuous(
+    "Probability of poor respiratory symptoms", 
+    limits=c(0.4,0.8)) +
+  scale_y_continuous("Posterior Density") +
+  scale_fill_manual(values = c('#1b9e77','#d95f02')) +
+  theme_classic() + 
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size=12))
+
+bme_avg <- slopes(
+  te_med, 
+  newdata   = subset(d3, treat==1),
+  variables = "treat", 
+  by        = "treat"
+  ) 
+
+# plot of treatment effect
+bme_avg_p <- bme_avg |>
+  posterior_draws() |>
+  ggplot(aes(x = draw)) +
+    stat_halfeye(slab_alpha = .5, fill = "#7570b3") +
+    annotate("text", x = -0.106, y = 0.95, 
+           label="Difference", color = '#7570b3') +
+    geom_vline(xintercept = 0, linetype = "dashed",
+               color = "gray60") +
+    scale_x_continuous("Marginal Effect", limits=c(-0.3,0.1)) +
+    scale_y_continuous("") +
+    theme_classic() + 
+    theme(legend.position = "none", 
+        axis.text.y = element_blank(),
+        axis.line.y = element_blank(), 
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size=12))
+
+
+bme_pred_p + bme_avg_p + 
+  plot_layout(widths = c(1, 1)) +
+  plot_annotation(title = "Posterior distributions of marginal predictions: poor respiratory symptoms")
+```
+
+## Cohort-specific ATTs
+```{r, cache=T}
+# by cohort
+bme_c <- slopes(
+  te_med, 
+  newdata   = subset(d3, treat & cohort_year),
+  variables = "treat", 
+  by        = "cohort_year"
+  )
+
+bti_c <- data.frame(
+  term = paste("ATT(g", bme_c$cohort_year, ")", sep=""), 
+  estimate = bme_c$estimate,
+  conf.low = bme_c$conf.low,
+  conf.high = bme_c$conf.high,
+  std.error = abs(bme_c$conf.high - 
+                    bme_c$conf.low) / (2 * 1.96)
+)
+
+betwfe_me_c <- list(tidy = bti_c, glance = gl)
+class(betwfe_me_c) <- "modelsummary_list"
+
+modelsummary(list("Simple Average" = bme_avg),
+  shape = term ~ model + statistic, 
+  statistic = c("({std.error})", "conf.int"),
+  gof_omit ='._*')
+
+modelsummary(list("Cohort Averages" = betwfe_me_c),
+  shape = term ~ model + statistic, 
+  statistic = c("({std.error})", "conf.int"),
+  gof_omit ='._*')
 ```
 
 ## Mediation model
 
+$$logit(Y_{it}) = \alpha^{village}_{v[i]} + \sum_{r=q}^{T} \beta_{r} d_{r} + \sum_{s=r}^{T} \gamma_{s} fs_{t}+ \sum_{r=q}^{T} \sum_{s=r}^{T} \tau_{rt} (d_{r} \times fs_{t}) \\ + \delta M_{it} + \sum_{r=q}^{T} \sum_{s=r}^{T} \eta_{rt} (d_{r} \times fs_{t} \times M_{it})$$
+where now we have added: 
+
+- $\delta$ = conditional effect of mediator  
+- $\eta_{rt}$ = treatment-mediator product terms
+
+## Estimates
+```{r, cache=TRUE}
+# wrangle aggregate ATTs for model summary table
+bmp <- data.frame(
+  term = bme_pred$treat,
+  estimate = bme_pred$estimate,
+  conf.low = bme_pred$conf.low,
+  conf.high = bme_pred$conf.high,
+  std.error = abs(bme_pred$conf.high - 
+                    bme_pred$conf.low) / (2 * 1.96)
+)
+
+bti <- data.frame(
+  term = 2,
+  estimate = bme_avg$estimate,
+  conf.low = bme_avg$conf.low,
+  conf.high = bme_avg$conf.high,
+  std.error = abs(bme_avg$conf.high - 
+                    bme_avg$conf.low) / (2 * 1.96)
+)
+
+bta <- bind_rows(bmp,bti) %>%
+  mutate(term = recode_factor(term,
+    `0` = "Untreated", `1` = "Treated",
+    `2` = "Difference"))
+
+gl <- data.frame()
+
+betwfe_me_avg <- list(tidy = bta, glance = gl)
+class(betwfe_me_avg) <- "modelsummary_list"
+
+# CDE estimates
+cde_med <- readRDS(here("code/fits", 
+  "bhet-med-cde_med.rds"))
+
+# marginal effects
+bcde_pred <- predictions(
+  cde_med, 
+  newdata   = subset(d3, treat==1),
+  variables = "treat", 
+  by        = "treat"
+  )
+
+bcde_avg <- slopes(
+  cde_med, 
+  newdata   = subset(d3, treat==1),
+  variables = "treat", 
+  by        = "treat"
+  ) 
+
+# wrangle aggregate ATTs for model summary table
+bmpc <- data.frame(
+  term = bcde_pred$treat,
+  estimate = bcde_pred$estimate,
+  conf.low = bcde_pred$conf.low,
+  conf.high = bcde_pred$conf.high,
+  std.error = abs(bcde_pred$conf.high - 
+                    bcde_pred$conf.low) / (2 * 1.96)
+)
+
+btic <- data.frame(
+  term = 2,
+  estimate = bcde_avg$estimate,
+  conf.low = bcde_avg$conf.low,
+  conf.high = bcde_avg$conf.high,
+  std.error = abs(bcde_avg$conf.high - 
+                    bcde_avg$conf.low) / (2 * 1.96)
+)
+
+btca <- bind_rows(bmpc,btic) %>%
+  mutate(term = recode_factor(term,
+    `0` = "Untreated", `1` = "Treated",
+    `2` = "Difference"))
+
+gl <- data.frame()
+
+bcde_me_avg <- list(tidy = btca, glance = gl)
+class(bcde_me_avg) <- "modelsummary_list"
+
+# both estimates
+modelsummary(list("Total Effect" = betwfe_me_avg,
+  "CDE" = bcde_me_avg),
+  shape = term ~ model + statistic, 
+  statistic = "conf.int",
+  gof_omit ='._*')
+```
+<br>
+
+- Minimal evidence of mediation. 
+
+- Proportion explained:  $PE = \frac{TE - CDE}{TE} = 0.08$
+  
 
 ## Extensions to multiple mediators
 
@@ -419,6 +650,15 @@ knitr::include_graphics(here("images", "posterior-te.png"))
 :::
 
 ::::
+
+## Summary
+
+- Mediation analysis aims are part of HEI project.
+- Likely to focus mostly on CDEs.
+
+- Tutorials, packages and macros in R, SAS, Stata [available.](https://www.hsph.harvard.edu/tyler-vanderweele/tools-and-tutorials/)^[See https://www.hsph.harvard.edu/tyler-vanderweele/tools-and-tutorials]
+- Recent *R* package [`regmedint`](https://kaz-yos.github.io/regmedint/) from @Yoshida:2022aa
+- Implementation with staggered DiD more likely to require manual implementation.
 
 
 ## References
