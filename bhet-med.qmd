@@ -12,7 +12,7 @@ format:
     height: 788
     slide-number: true
     html-math-method: katex
-    # embed-resources: true
+    embed-resources: true
     self-contained: true
     title-slide-attributes: 
       data-background-image: "images/mcgill-epi-logo.png"
