@@ -276,7 +276,7 @@ $$\color{red}E[Y|T,X,M] = \theta_{0} + \theta_{1}T + \theta_{2}M + \theta_{3}TM 
 
 
 Second equation estimates the "Controlled Direct Effect":
-$$\color{red}{CDE=\gamma_{1}+\gamma_{3}TM}$$
+$$\color{red}{CDE=\theta_{1}+\theta_{3}TM}$$
 
 ## Key assumptions {background-image="images/basic-dag.png" background-size="30%" background-position="top 0% left 100%"}
 
