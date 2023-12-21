@@ -13,6 +13,7 @@ format:
     slide-number: true
     html-math-method: katex
     # embed-resources: true
+    self-contained: true
     title-slide-attributes: 
       data-background-image: "images/mcgill-epi-logo.png"
       data-background-position: 50% 85%
