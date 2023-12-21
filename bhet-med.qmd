@@ -365,7 +365,7 @@ $Y$ = Poor respiratory symptoms
 
 'Poor respiratory symptoms' = 1 if frequency of any coughing, wheezing, etc. were "most" or "several" days a week.
 
-## Data
+## Data {.smaller}
 - 3 waves, complete data on outcome and mediator
 ```{r, cache = T}
 d3 <- readRDS(here("data-clean", "d3"))
@@ -417,11 +417,18 @@ $$logit(Y_{it}) = \alpha^{village}_{v[i]} + \sum_{r=q}^{T} \beta_{r} d_{r} + \su
 - $fs_{t}$ = time fixed effects  
 - $\tau_{rt}$ = cohort-time *ATTs*^[Log odds scale. Implemented using `brms` @Burkner:2017aa and `marginaleffects` @Arel-Bundock:2023aa] 
 
-## Marginal effects
-```{r, cache=TRUE}
+## Parameter estimates {.smaller}{visibility="hidden"}
+```{r, cache=T}
 ## load brms model
 te_med <- readRDS(here("code/fits", 
   "bhet-med-te_med.rds"))
+
+modelsummary(list("Total Effect" = te_med), shape = term ~ model + statistic,
+             statistic = "conf.int", gof_map = "nobs")
+```
+
+## Marginal effects
+```{r, cache=TRUE}
 
 bme_pred <- predictions(
   te_med, 

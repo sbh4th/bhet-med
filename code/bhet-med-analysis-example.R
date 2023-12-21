@@ -53,7 +53,7 @@ te_med <-
       file = "code/fits/bhet-med-te_med")
 
 # load if model already exists
-te_med <- readRDS("code/fits/bhet-resp-te_med.rds")
+te_med <- readRDS("code/fits/bhet-med-te_med.rds")
 
 ## check the chains
 mcmc_trace(te_med, pars=c("b_Intercept", "b_year_2021")) +
