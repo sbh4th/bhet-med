@@ -482,6 +482,20 @@ bme_pred_p + bme_avg_p +
 
 ## Cohort-specific ATTs
 ```{r, cache=T}
+bti <- data.frame(
+  term = "Avg ATT",
+  estimate = bme_avg$estimate,
+  conf.low = bme_avg$conf.low,
+  conf.high = bme_avg$conf.high,
+  std.error = abs(bme_avg$conf.high - 
+                    bme_avg$conf.low) / (2 * 1.96)
+)
+
+gl <- data.frame()
+
+betwfe_me_avg <- list(tidy = bti, glance = gl)
+class(betwfe_me_avg) <- "modelsummary_list"
+
 # by cohort
 bme_c <- slopes(
   te_med, 
@@ -502,7 +516,7 @@ bti_c <- data.frame(
 betwfe_me_c <- list(tidy = bti_c, glance = gl)
 class(betwfe_me_c) <- "modelsummary_list"
 
-modelsummary(list("Simple Average" = bme_avg),
+modelsummary(list("Simple Average" = betwfe_me_avg),
   shape = term ~ model + statistic, 
   statistic = c("({std.error})", "conf.int"),
   gof_omit ='._*')
@@ -659,7 +673,7 @@ modelsummary(list("Total Effect" = betwfe_me_avg,
 
 - Tutorials, packages and macros in R, SAS, Stata [available.](https://www.hsph.harvard.edu/tyler-vanderweele/tools-and-tutorials/)^[See https://www.hsph.harvard.edu/tyler-vanderweele/tools-and-tutorials]
 - Recent *R* package [`regmedint`](https://kaz-yos.github.io/regmedint/) from @Yoshida:2022aa
-- Implementation with staggered DiD more likely to require manual implementation.
+- Implementation with staggered DiD more likely to require manual implementation rather than 'default' R packages.
 
 
 ## References
