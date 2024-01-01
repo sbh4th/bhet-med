@@ -48,15 +48,16 @@ library(kableExtra)
 
 ### Aim 1.
 
-Estimate the total effect of the intervention.
+Mediation of policy impact on health by PM~2.5~
 
 ### Aim 2. 
 
-Estimate the contribution of changes in the chemical composition of $PM_{2.5}$ to the overall effect on health outcomes.
+Contribution of chemical composition of PM~2.5~ to the overall effect on health outcomes.
 
-### Aim 3. `r emo::ji("point_left")`
+### Aim 3.
 
-Examine alternative [pathways and mechanisms]{.blue} that may contribute to the intervention’s impact.
+Estimate source contribution to intervention impact on outdoor and personal exposure.
+
 :::
 
 ::::
