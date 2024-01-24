@@ -237,6 +237,9 @@ cde_med <-
       seed = 2326,
       file = "code/fits/bhet-med-cde_med")
 
+# load if already run
+cde_med <- readRDS("code/fits/bhet-med-cde_med.rds")
+
 # marginal effects
 bcde_pred <- predictions(
   cde_med, 
@@ -414,3 +417,4 @@ pd |>
     names_from = x, values_from = .epred) |> 
   mutate(diff = `1` - `0`) |> 
   median_qi(diff)
+
